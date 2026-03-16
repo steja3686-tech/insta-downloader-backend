@@ -13,30 +13,21 @@ app.get("/download", async (req, res) => {
   }
 
   try {
-    const api = `https://snapinsta.app/api/ajaxSearch`;
+    const api = `https://igram.world/api/convert?url=${encodeURIComponent(url)}`;
 
-    const response = await axios.post(
-      api,
-      new URLSearchParams({
-        q: url,
-        vt: "home"
-      }),
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        }
-      }
-    );
+    const response = await axios.get(api);
 
-    const data = response.data;
+    if (!response.data || !response.data.url) {
+      return res.json({ error: "Video not found" });
+    }
 
     res.json({
-      result: data
+      video: response.data.url
     });
 
-  } catch (err) {
+  } catch (error) {
     res.json({
-      error: "Failed to fetch video"
+      error: "Download failed"
     });
   }
 });
