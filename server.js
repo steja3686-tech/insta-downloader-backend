@@ -1,47 +1,46 @@
-const express = require("express")
-const axios = require("axios")
-const cors = require("cors")
+const express = require("express");
+const cors = require("cors");
+const ytdlp = require("yt-dlp-exec");
 
-const app = express()
+const app = express();
 
-app.use(cors())
+app.use(cors());
 
-app.get("/download", async (req,res)=>{
+app.get("/download", async (req, res) => {
 
-const url = req.query.url
+  const url = req.query.url;
 
-try{
+  if (!url) {
+    return res.json({ error: "No URL provided" });
+  }
 
-const response = await axios.get(url)
+  try {
 
-const html = response.data
+    const info = await ytdlp(url, {
+      dumpSingleJson: true,
+      noWarnings: true,
+      preferFreeFormats: true
+    });
 
-const regex = /"video_url":"([^"]+)"/
+    const video = info.url || info.formats?.[0]?.url;
 
-const match = html.match(regex)
+    res.json({
+      title: info.title,
+      video: video
+    });
 
-if(!match){
-return res.json({error:"Video not found"})
-}
+  } catch (error) {
 
-const video = match[1].replace(/\\u0026/g,"&")
+    res.json({
+      error: "Download failed"
+    });
 
-res.json({
-video: video
-})
+  }
 
-}catch(error){
-
-res.json({
-error:"Failed to fetch video"
-})
-
-}
-
-})
+});
 
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log("Server running on port " + PORT);
 });
