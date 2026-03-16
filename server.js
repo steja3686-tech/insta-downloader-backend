@@ -6,7 +6,6 @@ const app = express();
 app.use(cors());
 
 app.get("/download", async (req, res) => {
-
   const url = req.query.url;
 
   if (!url) {
@@ -14,29 +13,32 @@ app.get("/download", async (req, res) => {
   }
 
   try {
+    const api = `https://snapinsta.app/api/ajaxSearch`;
 
-    const api = `https://api.douyin.wtf/api?url=${encodeURIComponent(url)}`;
+    const response = await axios.post(
+      api,
+      new URLSearchParams({
+        q: url,
+        vt: "home"
+      }),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      }
+    );
 
-    const response = await axios.get(api);
-
-    const video = response.data?.data?.play;
-
-    if (!video) {
-      return res.json({ error: "Video not found" });
-    }
+    const data = response.data;
 
     res.json({
-      video: video
+      result: data
     });
 
   } catch (err) {
-
     res.json({
       error: "Failed to fetch video"
     });
-
   }
-
 });
 
 const PORT = process.env.PORT || 3000;
