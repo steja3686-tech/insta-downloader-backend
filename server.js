@@ -1,9 +1,8 @@
 const express = require("express");
+const axios = require("axios");
 const cors = require("cors");
-const ytdlp = require("yt-dlp-exec");
 
 const app = express();
-
 app.use(cors());
 
 app.get("/download", async (req, res) => {
@@ -16,23 +15,24 @@ app.get("/download", async (req, res) => {
 
   try {
 
-    const info = await ytdlp(url, {
-      dumpSingleJson: true,
-      noWarnings: true,
-      preferFreeFormats: true
-    });
+    const api = `https://api.douyin.wtf/api?url=${encodeURIComponent(url)}`;
 
-    const video = info.url || info.formats?.[0]?.url;
+    const response = await axios.get(api);
+
+    const video = response.data?.data?.play;
+
+    if (!video) {
+      return res.json({ error: "Video not found" });
+    }
 
     res.json({
-      title: info.title,
       video: video
     });
 
-  } catch (error) {
+  } catch (err) {
 
     res.json({
-      error: "Download failed"
+      error: "Failed to fetch video"
     });
 
   }
